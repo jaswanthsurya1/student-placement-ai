@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - PlacementAI{% endblock %}
+
+{% block content %}
+<div class="row gy-4">
+    <!-- Form Inputs Card (Left Column) -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm p-4 bg-white rounded-4">
+            <h3 class="fw-bold mb-3 section-title">Placement Evaluator</h3>
+            <p class="text-muted small mb-4">Input your academic achievements and technical skills below to run the machine learning placement prediction.</p>
+            
+            <form id="predictionForm">
+                <!-- Row 1: Student Name & Register Number -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="student_name" class="form-label">Student Name</label>
+                        <input type="text" class="form-control" id="student_name" name="student_name" required value="{{ session.get('user_name') }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="register_number" class="form-label">Register / Roll Number</label>
+                        <input type="text" class="form-control" id="register_number" name="register_number" required placeholder="e.g. 1210316220">
+                    </div>
+                </div>
+                
+                <!-- Row 2: Age, Gender & Dept -->
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="age" class="form-label">Age</label>
+                        <input type="number" class="form-control" id="age" name="age" min="18" max="30" value="21" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="gender" class="form-label">Gender</label>
+                        <select class="form-select" id="gender" name="gender" required>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="department" class="form-label">Department</label>
+                        <select class="form-select" id="department" name="department" required>
+                            <option value="CSE">Computer Science (CSE)</option>
+                            <option value="ECE">Electronics (ECE)</option>
+                            <option value="EEE">Electrical (EEE)</option>
+                            <option value="IT">Information Tech (IT)</option>
+                            <option value="ME">Mechanical (ME)</option>
+                            <option value="CE">Civil Eng (CE)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Row 3: CGPA & Aptitude -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="cgpa" class="form-label">CGPA (10.0 Scale)</label>
+                        <input type="number" class="form-control" id="cgpa" name="cgpa" step="0.01" min="5.0" max="10.0" value="7.5" required>
+                        <div class="form-text small">Range: 5.0 to 10.0</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="aptitude_score" class="form-label">Aptitude Score (%)</label>
+                        <input type="number" class="form-control" id="aptitude_score" name="aptitude_score" min="0" max="100" value="70" required>
+                        <div class="form-text small">Range: 0 to 100</div>
+                    </div>
+                </div>
+                
+                <!-- Row 4: Skills Ratings -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label d-block">Programming Skills</label>
+                        <div class="skill-rating-group">
+                            {% for i in range(1, 6) %}
+                            <div class="skill-rating-btn">
+                                <input type="radio" name="programming_skills" id="prog_{{ i }}" value="{{ i }}" {% if i == 3 %}checked{% endif %}>
+                                <label for="prog_{{ i }}" class="skill-rating-label">{{ i }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label d-block">Communication Skills</label>
+                        <div class="skill-rating-group">
+                            {% for i in range(1, 6) %}
+                            <div class="skill-rating-btn">
+                                <input type="radio" name="communication_skills" id="comm_{{ i }}" value="{{ i }}" {% if i == 3 %}checked{% endif %}>
+                                <label for="comm_{{ i }}" class="skill-rating-label">{{ i }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Row 5: Certifications, Projects & Internship -->
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="certifications" class="form-label">Certifications</label>
+                        <input type="number" class="form-control" id="certifications" name="certifications" min="0" max="10" value="0" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="projects_completed" class="form-label">Projects Completed</label>
+                        <input type="number" class="form-control" id="projects_completed" name="projects_completed" min="0" max="10" value="1" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="internship_status" class="form-label">Internship Status</label>
+                        <select class="form-select" id="internship_status" name="internship_status" required>
+                            <option value="No">No Internship</option>
+                            <option value="Yes">Has Internship</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Submit Action Button -->
+                <button type="submit" class="btn btn-primary w-100 py-3 mt-3 shadow-sm" id="predictBtn">
+                    <span id="btnText">Analyze & Predict Placement</span>
+                    <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Predictions Result Card (Right Column) -->
+    <div class="col-lg-6">
+        <!-- Default State: Pre-prediction screen -->
+        <div id="resultPlaceholder" class="card border-0 shadow-sm p-5 text-center bg-white rounded-4 h-100 d-flex flex-column justify-content-center align-items-center">
+            <div class="bg-primary-light text-primary rounded-circle d-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px; font-size: 2.2rem;">
+                <i class="bi bi-robot"></i>
+            </div>
+            <h4 class="fw-bold">Awaiting Input Data</h4>
+            <p class="text-muted w-75 mx-auto">
+                Fill in the form on the left and click "Analyze & Predict Placement" to generate placement prediction results, confidence score, and tailored skill recommendations.
+            </p>
+        </div>
+        
+        <!-- Result Display Card (Hidden by default) -->
+        <div id="resultCard" class="card border-0 shadow-sm p-4 bg-white rounded-4 h-100 d-none">
+            <h3 class="fw-bold mb-3 section-title">Analysis Results</h3>
+            
+            <div class="row align-items-center text-center text-md-start mb-4">
+                <!-- Circular progress bar -->
+                <div class="col-md-5 d-flex justify-content-center">
+                    <div class="progress-ring-container">
+                        <svg width="140" height="140">
+                            <circle stroke="#f0f0f5" stroke-width="10" fill="transparent" r="55" cx="70" cy="70"/>
+                            <circle id="progressRing" stroke="#0f62fe" stroke-width="10" fill="transparent" r="55" cx="70" cy="70" class="progress-ring-circle" stroke-dasharray="345.58" stroke-dashoffset="345.58"/>
+                        </svg>
+                        <div class="progress-ring-text" id="placementProb">0%</div>
+                    </div>
+                </div>
+                <!-- Predictions badges and outputs -->
+                <div class="col-md-7">
+                    <div class="mb-2">
+                        <span class="text-muted small uppercase fw-semibold">Placement Outlook:</span>
+                        <div class="mt-1">
+                            <span id="placementBadge" class="placed-badge">
+                                <i class="bi bi-check-circle-fill"></i> Placed
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <span class="text-muted small fw-semibold">Inference Confidence:</span>
+                        <span class="fw-bold ms-1" id="confidenceText">0%</span>
+                    </div>
+                    <div>
+                        <span class="text-muted small fw-semibold">Recommended Career Role:</span>
+                        <h5 class="text-primary fw-bold mt-1 mb-0" id="suggestedRole">Software Engineer</h5>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recommendations Section -->
+            <div class="border-top pt-3">
+                <h5 class="fw-bold mb-3"><i class="bi bi-patch-check-fill text-primary me-2"></i>Targeted Skill Recommendations</h5>
+                <div id="recommendationsList" style="max-height: 250px; overflow-y: auto; padding-right: 5px;">
+                    <!-- Appended dynamically -->
+                </div>
+            </div>
+            
+            <!-- Link to History -->
+            <div class="mt-auto pt-3 text-end">
+                <a href="{{ url_for('history') }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-clock-history me-1"></i> View Prediction History
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('predictionForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        const btn = document.getElementById('predictBtn');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
+        const placeholder = document.getElementById('resultPlaceholder');
+        const resultCard = document.getElementById('resultCard');
+        
+        // Show spinner, disable submit button
+        btn.disabled = true;
+        btnText.textContent = "Analyzing Details...";
+        btnSpinner.classList.remove('d-none');
+        
+        // Collect form data
+        const formData = new FormData(this);
+        const data = {};
+        formData.forEach((value, key) => {
+            // Check numeric conversions
+            if (['age', 'cgpa', 'aptitude_score', 'certifications', 'projects_completed'].includes(key)) {
+                data[key] = Number(value);
+            } else if (key === 'programming_skills' || key === 'communication_skills') {
+                data[key] = Number(value);
+            } else {
+                data[key] = value;
+            }
+        });
+        
+        // Post via AJAX
+        fetch("{{ url_for('api_predict') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.error || 'Server error') });
+            }
+            return response.json();
+        })
+        .then(res => {
+            if (res.success) {
+                // Hide placeholder, display result card
+                placeholder.classList.add('d-none');
+                resultCard.classList.remove('d-none');
+                
+                // Update Prediction text and badges
+                const badge = document.getElementById('placementBadge');
+                if (res.prediction === 'Placed') {
+                    badge.className = "placed-badge";
+                    badge.innerHTML = `<i class="bi bi-check-circle-fill"></i> Placed`;
+                    document.getElementById('progressRing').setAttribute('stroke', '#24a148'); // success color green
+                } else {
+                    badge.className = "notplaced-badge";
+                    badge.innerHTML = `<i class="bi bi-x-circle-fill"></i> Not Placed`;
+                    document.getElementById('progressRing').setAttribute('stroke', '#da1e28'); // danger color red
+                }
+                
+                // Update probability progress ring
+                const percent = res.probability;
+                document.getElementById('placementProb').textContent = `${percent}%`;
+                
+                const ring = document.getElementById('progressRing');
+                const radius = ring.r.baseVal.value;
+                const circumference = 2 * Math.PI * radius;
+                const offset = circumference - (percent / 100) * circumference;
+                ring.style.strokeDasharray = `${circumference}`;
+                ring.style.strokeDashoffset = offset;
+                
+                // Update confidence and role
+                document.getElementById('confidenceText').textContent = `${res.confidence}%`;
+                document.getElementById('suggestedRole').textContent = res.suggested_role;
+                
+                // Update recommendations
+                const recsList = document.getElementById('recommendationsList');
+                recsList.innerHTML = '';
+                
+                res.recommendations.forEach(r => {
+                    const item = document.createElement('div');
+                    item.className = `recommendation-item severity-${r.severity}`;
+                    item.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="recommendation-tag ${r.severity}">${r.severity} Priority</span>
+                            <strong class="small text-dark">${r.category}</strong>
+                        </div>
+                        <p class="mb-0 small text-muted">${r.message}</p>
+                    `;
+                    recsList.appendChild(item);
+                });
+            }
+        })
+        .catch(err => {
+            alert(err.message || "An error occurred. Please verify inputs.");
+            console.error(err);
+        })
+        .finally(() => {
+            // Restore button states
+            btn.disabled = false;
+            btnText.textContent = "Analyze & Predict Placement";
+            btnSpinner.classList.add('d-none');
+        });
+    });
+</script>
+{% endblock %}

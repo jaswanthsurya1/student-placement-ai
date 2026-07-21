@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Register - PlacementAI{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="card border-0 shadow-lg p-4 bg-white rounded-4">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold mb-1">Create Account</h2>
+            <p class="text-muted small">Sign up to predict your placement status</p>
+        </div>
+        
+        <form method="POST" action="{{ url_for('register') }}" onsubmit="return validateForm()">
+            <!-- Name Input -->
+            <div class="mb-3">
+                <label for="name" class="form-label">Full Name</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-person"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-1" id="name" name="name" required placeholder="John Doe">
+                </div>
+            </div>
+            
+            <!-- Email Input -->
+            <div class="mb-3">
+                <label for="email" class="form-label">Email Address</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                    <input type="email" class="form-control border-start-0 ps-1" id="email" name="email" required placeholder="john.doe@university.edu">
+                </div>
+            </div>
+            
+            <!-- Password Input -->
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-lock"></i></span>
+                    <input type="password" class="form-control border-start-0 ps-1" id="password" name="password" required placeholder="Min 6 characters">
+                </div>
+                <div class="form-text small" id="pw-hint">Password must be at least 6 characters.</div>
+            </div>
+            
+            <!-- Confirm Password Input -->
+            <div class="mb-4">
+                <label for="confirm_password" class="form-label">Confirm Password</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-shield-lock"></i></span>
+                    <input type="password" class="form-control border-start-0 ps-1" id="confirm_password" name="confirm_password" required placeholder="Re-enter password">
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary w-100 py-2 shadow-sm mb-3">
+                Register <i class="bi bi-person-plus ms-1"></i>
+            </button>
+        </form>
+        
+        <div class="text-center mt-3">
+            <span class="text-muted small">Already have an account?</span> 
+            <a href="{{ url_for('login') }}" class="text-primary small fw-semibold text-decoration-none ms-1">Log In</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function validateForm() {
+        const password = document.getElementById('password').value;
+        const confirm_password = document.getElementById('confirm_password').value;
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        
+        if (!name || !email) {
+            alert('Please fill out all fields.');
+            return false;
+        }
+        
+        if (password.length < 6) {
+            alert('Password must be at least 6 characters long.');
+            return false;
+        }
+        
+        if (password !== confirm_password) {
+            alert('Passwords do not match.');
+            return false;
+        }
+        
+        return true;
+    }
+</script>
+{% endblock %}

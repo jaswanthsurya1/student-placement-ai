@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}My Prediction History - PlacementAI{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm p-4 bg-white rounded-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-1 section-title">Prediction History</h3>
+            <p class="text-muted small mb-0">Review your past evaluation scores, predictions, and recommendations.</p>
+        </div>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-circle me-1"></i> New Assessment
+        </a>
+    </div>
+
+    {% if not predictions %}
+        <div class="text-center py-5">
+            <div class="text-muted fs-1 mb-3"><i class="bi bi-clipboard-x"></i></div>
+            <h5>No Prediction Records Found</h5>
+            <p class="text-muted small">You haven't run any placement predictions yet. Head over to the dashboard to begin.</p>
+        </div>
+    {% else %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Student Profile</th>
+                        <th>Register No</th>
+                        <th>CGPA</th>
+                        <th>Aptitude</th>
+                        <th>Prog / Comm</th>
+                        <th>Internship</th>
+                        <th>Prediction</th>
+                        <th>Probability</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pred in predictions %}
+                        <tr>
+                            <!-- Date -->
+                            <td class="text-muted small">{{ pred.timestamp }}</td>
+                            
+                            <!-- Profile -->
+                            <td>
+                                <strong class="text-dark d-block">{{ pred.student_name }}</strong>
+                                <span class="text-muted small">{{ pred.department }}</span>
+                            </td>
+                            
+                            <!-- Register No -->
+                            <td><code class="small text-dark">{{ pred.register_number }}</code></td>
+                            
+                            <!-- CGPA -->
+                            <td><span class="badge bg-light text-dark border">{{ pred.cgpa }}</span></td>
+                            
+                            <!-- Aptitude -->
+                            <td>{{ pred.aptitude_score }}%</td>
+                            
+                            <!-- Skills -->
+                            <td>
+                                <span class="small d-block text-muted">Prog: <strong>{{ pred.programming_skills }}/5</strong></span>
+                                <span class="small d-block text-muted">Comm: <strong>{{ pred.communication_skills }}/5</strong></span>
+                            </td>
+                            
+                            <!-- Internship -->
+                            <td>
+                                {% if pred.internship_status == 'Yes' %}
+                                    <span class="badge bg-success-light text-success"><i class="bi bi-check-circle"></i> Yes</span>
+                                {% else %}
+                                    <span class="badge bg-light text-muted border"><i class="bi bi-x-circle"></i> No</span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- Prediction Result -->
+                            <td>
+                                {% if pred.prediction_result == 'Placed' %}
+                                    <span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Placed</span>
+                                {% else %}
+                                    <span class="text-danger fw-bold"><i class="bi bi-x-circle-fill"></i> Not Placed</span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- Probability -->
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height: 6px; width: 60px;">
+                                        <div class="progress-bar {% if pred.prediction_result == 'Placed' %}bg-success{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ pred.placement_probability }}%"></div>
+                                    </div>
+                                    <span class="small fw-semibold">{{ pred.placement_probability }}%</span>
+                                </div>
+                            </td>
+                            
+                            <!-- Collapsible Trigger -->
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#recs_{{ pred.id }}" aria-expanded="false" aria-controls="recs_{{ pred.id }}">
+                                    Details <i class="bi bi-chevron-down small ms-1"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        
+                        <!-- Collapsible Recommendations Row -->
+                        <tr class="collapse border-bottom" id="recs_{{ pred.id }}">
+                            <td colspan="10" class="bg-light bg-opacity-50 p-4">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3 mb-md-0">
+                                        <h6 class="fw-bold mb-2">Metrics Summary</h6>
+                                        <ul class="list-unstyled mb-0 text-muted small">
+                                            <li class="mb-1">Projects Completed: <strong>{{ pred.projects_completed }}</strong></li>
+                                            <li class="mb-1">Certifications: <strong>{{ pred.certifications }}</strong></li>
+                                            <li class="mb-1">Suggested Role: <strong class="text-primary">{{ pred.suggested_role }}</strong></li>
+                                            <li>Prediction Confidence: <strong>{{ pred.confidence_score }}%</strong></li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <h6 class="fw-bold mb-2">Tailored Skill Recommendations</h6>
+                                        <div class="row g-2">
+                                            {% for r in pred.recommendations %}
+                                                <div class="col-12">
+                                                    <div class="p-2 border rounded bg-white text-start">
+                                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                                            <span class="badge {% if r.severity == 'High' %}bg-danger{% elif r.severity == 'Medium' %}bg-warning text-dark{% else %}bg-success{% endif %} text-uppercase" style="font-size: 0.65rem;">
+                                                                {{ r.severity }}
+                                                            </span>
+                                                            <span class="small fw-bold text-muted" style="font-size: 0.75rem;">{{ r.category }}</span>
+                                                        </div>
+                                                        <p class="mb-0 text-muted small" style="font-size: 0.85rem;">{{ r.message|safe }}</p>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

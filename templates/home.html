@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}PlacementAI - Student Placement Prediction & Recommendations{% endblock %}
+
+{% block content %}
+</div> <!-- Close default container to allow full-width hero -->
+
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center gy-5">
+            <div class="col-lg-6">
+                <span class="badge bg-primary-light text-primary px-3 py-2 rounded-pill fw-semibold mb-3">
+                    <i class="bi bi-stars"></i> Powered by Machine Learning
+                </span>
+                <h1 class="hero-title">Predict Your Placement & Upgrade Your Skills</h1>
+                <p class="hero-subtitle">
+                    Enter your academic scores and skill levels to predict your placement probability. Get personalized, actionable skill recommendations and career role suggestions backed by state-of-the-art predictive analytics.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    {% if session.get('user_id') %}
+                        <a href="{{ url_for('dashboard' if session.get('user_role') == 'student' else 'admin') }}" class="btn btn-primary btn-lg shadow-sm">
+                            Go to Dashboard <i class="bi bi-arrow-right ms-2"></i>
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg shadow-sm">
+                            Get Started Now <i class="bi bi-arrow-right ms-2"></i>
+                        </a>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">
+                            Log In
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <div class="position-relative d-inline-block">
+                    <!-- Elegant abstract visual representation of ML & Career -->
+                    <div class="card border-0 shadow-lg p-4 bg-white rounded-4" style="max-width: 500px; margin: 0 auto;">
+                        <div class="d-flex align-items-center gap-3 mb-4 text-start">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.5rem;">
+                                <i class="bi bi-bar-chart-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Placement Probability</h6>
+                                <small class="text-muted">Analyzing student profile...</small>
+                            </div>
+                            <span class="ms-auto badge bg-success text-success bg-opacity-10 px-3 py-2 rounded-pill fw-bold">92.4% Placed</span>
+                        </div>
+                        <div class="border-top pt-3 text-start">
+                            <h6 class="fw-bold mb-2">Top Personalized Recommendations:</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li class="d-flex align-items-start gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                    <span>Learn advanced DSA (Python/Java)</span>
+                                </li>
+                                <li class="d-flex align-items-start gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                    <span>Complete at least 2 full-stack projects</span>
+                                </li>
+                                <li class="d-flex align-items-start gap-2">
+                                    <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                    <span>Practice mock aptitude tests</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5 py-4">
+    <!-- Features Section -->
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Key Platform Features</h2>
+        <p class="text-muted mx-auto" style="max-width: 600px;">
+            Designed specifically for final-year college students and university administrators to maximize employment outcomes.
+        </p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card h-100 p-4 border-0 shadow-sm feature-card">
+                <div class="feature-icon-wrapper">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <h4 class="fw-semibold">Bias-Free AI Models</h4>
+                <p class="text-muted mb-0">
+                    We train models strictly on merit, projects, and skills. Demographics like gender and age are excluded during prediction to guarantee objective assessment.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 p-4 border-0 shadow-sm feature-card">
+                <div class="feature-icon-wrapper">
+                    <i class="bi bi-lightbulb"></i>
+                </div>
+                <h4 class="fw-semibold">Skill Gap Recommendations</h4>
+                <p class="text-muted mb-0">
+                    Our system checks details like coding skills, certifications, and internships to supply direct learning links and advice on how to improve.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 p-4 border-0 shadow-sm feature-card">
+                <div class="feature-icon-wrapper">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <h4 class="fw-semibold">Admin Insights Dashboard</h4>
+                <p class="text-muted mb-0">
+                    Track global metrics, recommended skills distribution, and placement statistics via charts. Keep an eye on student preparation trends in real-time.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- About AI Prediction Section -->
+    <div class="bg-white border rounded-4 p-5 shadow-sm my-5">
+        <div class="row align-items-center gy-4">
+            <div class="col-lg-7">
+                <h3 class="fw-bold mb-3">About the AI Placement Engine</h3>
+                <p class="text-muted">
+                    Our platform executes multiple machine learning algorithms including <strong>Logistic Regression</strong>, <strong>Decision Trees</strong>, <strong>Random Forests</strong>, and <strong>K-Nearest Neighbors (KNN)</strong>.
+                </p>
+                <p class="text-muted">
+                    When you run a prediction, the model compares the configurations against historical placement data. The engine automatically selects the highest-accuracy model to output your probability of selection and confidence.
+                </p>
+                <a href="{{ url_for('performance') }}" class="btn btn-outline-primary mt-2">
+                    <i class="bi bi-bar-chart-steps me-2"></i> View Model Performance
+                </a>
+            </div>
+            <div class="col-lg-5">
+                <div class="p-3 bg-light-bg rounded-3 border">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-semibold">Logistic Regression</span>
+                        <span class="text-primary fw-bold">88.33% Acc</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar" role="progressbar" style="width: 88.33%" aria-valuenow="88.33" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-semibold">Decision Tree</span>
+                        <span class="text-primary fw-bold">87.00% Acc</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: 87.00%" aria-valuenow="87" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-semibold">Random Forest</span>
+                        <span class="text-primary fw-bold">86.33% Acc</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 86.33%" aria-valuenow="86.33" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-semibold">K-Nearest Neighbors</span>
+                        <span class="text-primary fw-bold">84.67% Acc</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: 84.67%" aria-valuenow="84.67" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div> <!-- Re-open container to let base.html finish cleanly -->
+{% endblock %}

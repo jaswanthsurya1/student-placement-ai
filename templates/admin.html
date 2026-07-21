@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - PlacementAI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1 section-title">Admin Dashboard</h2>
+        <p class="text-muted small mb-0">System-wide analytics, placement statistics, and skill gap visualizations.</p>
+    </div>
+    <span class="badge bg-primary px-3 py-2 rounded-pill fw-semibold"><i class="bi bi-shield-lock-fill"></i> Admin Mode</span>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm p-4 bg-white rounded-4 stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small uppercase fw-semibold d-block mb-1">Active Students</span>
+                    <h3 class="fw-bold mb-0 text-dark">{{ total_students }}</h3>
+                </div>
+                <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm p-4 bg-white rounded-4 stat-card predictions">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small uppercase fw-semibold d-block mb-1">Total Predictions</span>
+                    <h3 class="fw-bold mb-0 text-dark">{{ total_predictions }}</h3>
+                </div>
+                <div class="stat-icon"><i class="bi bi-cpu-fill"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm p-4 bg-white rounded-4 stat-card placed">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small uppercase fw-semibold d-block mb-1">Placement Rate</span>
+                    <h3 class="fw-bold mb-0 text-success">{{ placement_rate }}%</h3>
+                </div>
+                <div class="stat-icon"><i class="bi bi-award-fill"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm p-4 bg-white rounded-4 stat-card" style="border-left-color: var(--warning);">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small uppercase fw-semibold d-block mb-1">Top Skill Gap</span>
+                    <h5 class="fw-bold mb-0 text-dark truncate">
+                        {% if recommended_skills %}{{ recommended_skills[0][0] }}{% else %}None{% endif %}
+                    </h5>
+                </div>
+                <div class="stat-icon"><i class="bi bi-lightbulb-fill" style="color: rgba(241, 194, 27, 0.2);"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Grid -->
+<div class="row g-4 mb-5">
+    <!-- Chart 1: Placement Distribution -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm p-4 bg-white rounded-4 h-100">
+            <h6 class="fw-bold mb-3 text-center">Placement Outlook</h6>
+            <div style="height: 200px; position: relative;">
+                <canvas id="placementChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chart 2: Recommended Skills -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm p-4 bg-white rounded-4 h-100">
+            <h6 class="fw-bold mb-3 text-center">Audit: Gender Count</h6>
+            <div style="height: 200px; position: relative;">
+                <canvas id="genderChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chart 3: Department-wise predictions -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm p-4 bg-white rounded-4 h-100">
+            <h6 class="fw-bold mb-3">Department Distribution</h6>
+            <div style="height: 200px; position: relative;">
+                <canvas id="deptChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chart 4: Recommendations Distribution -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm p-4 bg-white rounded-4">
+            <h6 class="fw-bold mb-3">Skill Deficiencies (Recommended Improvements)</h6>
+            <div style="height: 250px; position: relative;">
+                <canvas id="skillChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Student & Prediction Lists -->
+<div class="card border-0 shadow-sm p-4 bg-white rounded-4">
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs border-0 mb-4 bg-light p-1 rounded-3 d-inline-flex" id="adminTabs" role="tablist" style="width: fit-content;">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active border-0 px-3 py-2 fw-semibold" id="active-students-tab" data-bs-toggle="tab" data-bs-target="#active-students" type="button" role="tab" aria-controls="active-students" aria-selected="true">
+                <i class="bi bi-people-fill me-1"></i> Active Students (Entered Data)
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link border-0 px-3 py-2 fw-semibold" id="recent-predictions-tab" data-bs-toggle="tab" data-bs-target="#recent-predictions" type="button" role="tab" aria-controls="recent-predictions" aria-selected="false">
+                <i class="bi bi-list-stars me-1"></i> Recent Prediction Runs
+            </button>
+        </li>
+    </ul>
+    
+    <div class="tab-content" id="adminTabsContent">
+        <!-- Active Students Tab -->
+        <div class="tab-pane fade show active" id="active-students" role="tabpanel" aria-labelledby="active-students-tab">
+            {% if not active_students %}
+                <p class="text-muted text-center py-4 mb-0">No active students have entered details yet.</p>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Register No</th>
+                                <th>Email</th>
+                                <th>Department</th>
+                                <th>CGPA</th>
+                                <th>Latest Prediction</th>
+                                <th>Latest Probability</th>
+                                <th>Last Assessment Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in active_students %}
+                                <tr>
+                                    <td><strong>{{ student.name }}</strong></td>
+                                    <td><code class="small text-dark">{{ student.register_number }}</code></td>
+                                    <td class="text-muted small">{{ student.email }}</td>
+                                    <td>{{ student.department }}</td>
+                                    <td><span class="badge bg-light text-dark border">{{ student.cgpa }}</span></td>
+                                    <td>
+                                        {% if student.latest_result == 'Placed' %}
+                                            <span class="badge bg-success-light text-success"><i class="bi bi-check-circle"></i> Placed</span>
+                                        {% else %}
+                                            <span class="badge bg-danger-light text-danger"><i class="bi bi-x-circle"></i> Not Placed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="fw-semibold">{{ student.latest_prob }}%</td>
+                                    <td class="text-muted small">{{ student.timestamp }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Recent Predictions Tab -->
+        <div class="tab-pane fade" id="recent-predictions" role="tabpanel" aria-labelledby="recent-predictions-tab">
+            {% if not recent_predictions %}
+                <p class="text-muted text-center py-4 mb-0">No prediction records available in database.</p>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Student Name</th>
+                                <th>Dept</th>
+                                <th>CGPA</th>
+                                <th>Aptitude</th>
+                                <th>Skills (P/C)</th>
+                                <th>Project/Cert</th>
+                                <th>Result</th>
+                                <th>Probability</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pred in recent_predictions %}
+                                <tr>
+                                    <td class="text-muted small">{{ pred.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td><strong>{{ pred.student_name }}</strong></td>
+                                    <td>{{ pred.department }}</td>
+                                    <td><span class="badge bg-light text-dark border">{{ pred.cgpa }}</span></td>
+                                    <td>{{ pred.aptitude_score }}%</td>
+                                    <td>{{ pred.programming_skills }} / {{ pred.communication_skills }}</td>
+                                    <td>{{ pred.projects_completed }} Proj / {{ pred.certifications }} Cert</td>
+                                    <td>
+                                        {% if pred.prediction_result == 'Placed' %}
+                                            <span class="badge bg-success-light text-success"><i class="bi bi-check-circle"></i> Placed</span>
+                                        {% else %}
+                                            <span class="badge bg-danger-light text-danger"><i class="bi bi-x-circle"></i> Not Placed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="fw-semibold">{{ pred.placement_probability }}%</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Data passed from Flask views
+    const deptCounts = JSON.parse('{{ dept_counts_json|safe }}');
+    const genderCounts = JSON.parse('{{ gender_counts_json|safe }}');
+    const skillCounts = JSON.parse('{{ skill_counts_json|safe }}');
+    
+    const placedCount = {{ placed_count }};
+    const notPlacedCount = {{ not_placed_count }};
+
+    // 1. Placement Outlook Chart (Doughnut)
+    new Chart(document.getElementById('placementChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Placed', 'Not Placed'],
+            datasets: [{
+                data: [placedCount, notPlacedCount],
+                backgroundColor: ['#24a148', '#da1e28'],
+                borderWidth: 2,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Plus Jakarta Sans' } } }
+            }
+        }
+    });
+
+    // 2. Gender Count Chart (Pie)
+    new Chart(document.getElementById('genderChart'), {
+        type: 'pie',
+        data: {
+            labels: Object.keys(genderCounts),
+            datasets: [{
+                data: Object.values(genderCounts),
+                backgroundColor: ['#0f62fe', '#008dff', '#dde1e6'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Plus Jakarta Sans' } } }
+            }
+        }
+    });
+
+    // 3. Department Counts Chart (Bar)
+    new Chart(document.getElementById('deptChart'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(deptCounts),
+            datasets: [{
+                label: 'Prediction Runs',
+                data: Object.values(deptCounts),
+                backgroundColor: '#0f62fe',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f0f0f5' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // 4. Skills Recommendations Chart (Horizontal Bar)
+    new Chart(document.getElementById('skillChart'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(skillCounts),
+            datasets: [{
+                label: 'Students Recommended for Training',
+                data: Object.values(skillCounts),
+                backgroundColor: '#008dff',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { beginAtZero: true, grid: { color: '#f0f0f5' } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+</script>
+{% endblock %}
